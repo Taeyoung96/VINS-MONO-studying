@@ -1,5 +1,9 @@
-# VINS-Mono-TUM-format
+# VINS-Mono-Studying  
 ## A Robust and Versatile Monocular Visual-Inertial State Estimator
+
+개인적으로 VINS-MONO를 공부하고 주석을 달아놓은 Repository입니다.  
+아직 정리중에 있으며, 주석 update는 불규칙적으로 진행됩니다.  
+[evo tool](https://github.com/MichaelGrupp/evo)을 사용하기 위해 Output txt file의 format을 변경했습니다.  
 
 ## What has changed in this Repository
 
