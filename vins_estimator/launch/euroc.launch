@@ -1,0 +1,30 @@
+<!--launch 파일에 대한 주석 추가-->
+
+<launch>
+    <arg name="config_path" default = "$(find feature_tracker)/../config/euroc/euroc_config.yaml" />
+	  <arg name="vins_path" default = "$(find feature_tracker)/../config/../" />
+    <!--feature_tracker node와 관련된 parameter-->
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+    <!--vins_estimator node와 관련된 parameter-->
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <!--pose_graph node와 관련된 parameter-->
+    <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        
+        <!--pose_graph 최적화 후 얻은 x좌표, y좌표 이동 (default : 0)-->
+        <param name="visualization_shift_x" type="int" value="0" />
+        <param name="visualization_shift_y" type="int" value="0" />
+
+        <!--pose_graph process() 함수에서 쓰이는 parameter-->
+        <param name="skip_cnt" type="int" value="0" />
+        <param name="skip_dis" type="double" value="0" />
+    </node>
+
+</launch>
