@@ -121,7 +121,8 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
 /**
  * @brief    imu값과 feature값을 읽어서 measurement에 넣어준다.
  * @brief    initialization과 optimization을 모두 수행
- * @param    image , header
+ * @param    image (feature_id가 인덱스로 있고, 각각의 feature point  (camera_id, [x, y, z, u, v, vx, vy])로 구성되어 있는 map 자료구조.)
+ * @param    header (ros header)
  * @return   void
  */
 void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const std_msgs::Header &header)
@@ -145,7 +146,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     imageframe.pre_integration = tmp_pre_integration;
     all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe));
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
-    // 여기서 acc_0하고 gyr_0은 어떻게 초기화가 되는거지?
+    // 여기서 acc_0하고 gyr_0은 어떻게 초기화가 되는거지? - processIMU()에서 초기화
 
     // 내가 관심 있는 부분, 아무 초기값이 주어져 있지 않을 때
     if(ESTIMATE_EXTRINSIC == 2)

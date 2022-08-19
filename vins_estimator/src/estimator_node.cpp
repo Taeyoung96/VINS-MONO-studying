@@ -329,7 +329,7 @@ void process()
                 double p_v = img_msg->channels[2].values[i];
                 double velocity_x = img_msg->channels[3].values[i];
                 double velocity_y = img_msg->channels[4].values[i];
-                ROS_ASSERT(z == 1);
+                ROS_ASSERT(z == 1); // z는 왜 1이면 안되지?
                 Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
                 xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
                 image[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
@@ -341,9 +341,12 @@ void process()
 
             double whole_t = t_s.toc();
             printStatistics(estimator, whole_t);
+
+
             std_msgs::Header header = img_msg->header;
             header.frame_id = "world";
 
+            // publish
             pubOdometry(estimator, header);
             pubKeyPoses(estimator, header);
             pubCameraPose(estimator, header);
