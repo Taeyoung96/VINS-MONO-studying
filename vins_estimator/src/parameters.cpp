@@ -5,8 +5,8 @@ double MIN_PARALLAX;
 double ACC_N, ACC_W;
 double GYR_N, GYR_W;
 
-std::vector<Eigen::Matrix3d> RIC;
-std::vector<Eigen::Vector3d> TIC;
+std::vector<Eigen::Matrix3d> RIC;   // rotation matrix가 vector에 저장되어 있음
+std::vector<Eigen::Vector3d> TIC;   // translation vector가 vector에 저장되어 있음
 
 Eigen::Vector3d G{0.0, 0.0, 9.8};
 
@@ -80,14 +80,14 @@ void readParameters(ros::NodeHandle &n)
     if (ESTIMATE_EXTRINSIC == 2)
     {
         ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
-        RIC.push_back(Eigen::Matrix3d::Identity());
-        TIC.push_back(Eigen::Vector3d::Zero());
+        RIC.push_back(Eigen::Matrix3d::Identity()); // 우선 항등행렬로 초기값을 결정한다.
+        TIC.push_back(Eigen::Vector3d::Zero());     // 우선 0,0,0으로 초기값을 결정한다.
         EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";
 
     }
     else 
     {
-        if ( ESTIMATE_EXTRINSIC == 1)
+        if ( ESTIMATE_EXTRINSIC == 1)   // 나중에 Estimate_extrinsic이 2에서 1로 바뀜
         {
             ROS_WARN(" Optimize extrinsic param around initial guess!");
             EX_CALIB_RESULT_PATH = OUTPUT_PATH + "/extrinsic_parameter.csv";

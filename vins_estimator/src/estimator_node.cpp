@@ -98,6 +98,9 @@ void update()
 
 }
 
+/**
+ * @brief    imu값과 feature값을 읽어서 measurement에 넣어준다.
+ */
 std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>>
 getMeasurements()
 {
@@ -105,9 +108,10 @@ getMeasurements()
 
     while (true)
     {
-        if (imu_buf.empty() || feature_buf.empty())
-            return measurements;
 
+        if (imu_buf.empty() || feature_buf.empty()) // 만약에 imu_buf, feature_buf가 비어있다면
+            return measurements;
+    
         if (!(imu_buf.back()->header.stamp.toSec() > feature_buf.front()->header.stamp.toSec() + estimator.td))
         {
             //ROS_WARN("wait for imu, only should happen at the beginning");
@@ -216,6 +220,7 @@ void process()
 {
     while (true)
     {
+        // measurment라는 자료형에는 imu topic이 vector 쌍으로 들어가있고, feature topic이 PointCloud형식으로 들어가서 pair를 맞춘다.
         std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
         std::unique_lock<std::mutex> lk(m_buf);
 
@@ -231,7 +236,7 @@ void process()
         // measurement를 통해 IMU data와 Image align 진행
         for (auto &measurement : measurements)
         {
-            auto img_msg = measurement.second;
+            auto img_msg = measurement.second;  // image message = PointCloud Pointer
             double dx = 0, dy = 0, dz = 0, rx = 0, ry = 0, rz = 0;
             for (auto &imu_msg : measurement.first)
             {
@@ -242,7 +247,7 @@ void process()
                     if (current_time < 0)
                         current_time = t;   // IMU timestamp를 현재 Timestamp 기준으로
                     double dt = t - current_time;
-                    ROS_ASSERT(dt >= 0);
+                    ROS_ASSERT(dt >= 0);    // 디버깅용
                     current_time = t;
 
                     // IMU topic에서 가져오기
@@ -286,6 +291,7 @@ void process()
                 relo_msg = relo_buf.front();
                 relo_buf.pop();
             }
+
             if (relo_msg != NULL)
             {
                 vector<Vector3d> match_points;
@@ -329,7 +335,8 @@ void process()
                 image[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
             }
 
-            // processImage 함수 실행
+            // processImage 함수 실행 (굉장히 중요)
+            // 이 함수에서 대부분의 기능을 수행한다.
             estimator.processImage(image, img_msg->header);
 
             double whole_t = t_s.toc();
@@ -347,7 +354,6 @@ void process()
                 pubRelocalization(estimator);
             //ROS_ERROR("end: %f, at %f", img_msg->header.stamp.toSec(), ros::Time::now().toSec());
         }
-
 
         m_estimator.unlock();
         m_buf.lock();

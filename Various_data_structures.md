@@ -77,7 +77,7 @@ std::vector< sensor_msgs::ImuConstPtr>는 이전 frame과 현재 frame 사이에
 
 ### 2. `map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> image`  
 
-`estimator_node.cpp` 파일에 있는 `prcess()`에서 생성하고, `estimator.processImage(image, img_msg->header)`
+`estimator_node.cpp` 파일에 있는 `process()`에서 생성하고, `estimator.processImage(image, img_msg->header)`
 `estimator.cpp` 파일에 있는 Estimator::processImage()에서 호출  
 
 feature_id가 인덱스로 있고, 각각의 feature point  (camera_id, [x, y, z, u, v, vx, vy])로 구성되어 있는 map 자료구조.  

@@ -118,6 +118,12 @@ void Estimator::processIMU(double dt, const Vector3d &linear_acceleration, const
     gyr_0 = angular_velocity;
 }
 
+/**
+ * @brief    imu값과 feature값을 읽어서 measurement에 넣어준다.
+ * @brief    initialization과 optimization을 모두 수행
+ * @param    image , header
+ * @return   void
+ */
 void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const std_msgs::Header &header)
 {
     ROS_DEBUG("new image coming ------------------------------------------");
@@ -139,17 +145,21 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     imageframe.pre_integration = tmp_pre_integration;
     all_image_frame.insert(make_pair(header.stamp.toSec(), imageframe));
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
+    // 여기서 acc_0하고 gyr_0은 어떻게 초기화가 되는거지?
 
+    // 내가 관심 있는 부분, 아무 초기값이 주어져 있지 않을 때
     if(ESTIMATE_EXTRINSIC == 2)
     {
         ROS_INFO("calibrating extrinsic param, rotation movement is needed");
         if (frame_count != 0)
         {
             vector<pair<Vector3d, Vector3d>> corres = f_manager.getCorresponding(frame_count - 1, frame_count);
-            Matrix3d calib_ric;
+            Matrix3d calib_ric; // rotation만 우선 초기화 진행
+
+            // 여기서도 frame count가 늘어남
             if (initial_ex_rotation.CalibrationExRotation(corres, pre_integrations[frame_count]->delta_q, calib_ric))
             {
-                ROS_WARN("initial extrinsic rotation calib success");
+                ROS_INFO("initial extrinsic rotation calib success");
                 ROS_WARN_STREAM("initial extrinsic rotation: " << endl << calib_ric);
                 ric[0] = calib_ric;
                 RIC[0] = calib_ric;
@@ -187,7 +197,28 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         else
             frame_count++;
     }
-    else
+
+    else    // solver_flag == NON_LINEAR
+    {
+        TicToc t_solve;
+        solveOdometry();
+        ROS_DEBUG("solver costs: %fms", t_solve.toc());
+        if (failure_occur)
+        {
+            failure_occur = 0;
+            slideWindow();
+        }
+        else
+            slideWindow();
+        if( pub_count == 0 )
+        {
+            pub_count = 1;
+            publishOdometry();
+        }
+        else
+            pub_count = 0;
+    }
+
     {
         TicToc t_solve;
         solveOdometry();
