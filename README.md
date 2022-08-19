@@ -6,7 +6,6 @@
 [evo tool](https://github.com/MichaelGrupp/evo)을 사용하기 위해 Output txt file의 format을 변경했습니다.  
 
 VINS-MONO에는 다양한 자료구조들이 정의되고 사용되고 있습니다.  
-
 이해하기 쉽도록, [Various_data_structures](./Various_data_structures.md)에 정리하고 있습니다.  
 
 ## What has changed in this Repository
