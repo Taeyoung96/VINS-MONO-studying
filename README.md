@@ -15,7 +15,7 @@ VINS-MONO에는 다양한 자료구조들이 정의되고 사용되고 있습니
 > You could refer to [this issue](https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/10) that meaning of original `vins_result_loop.csv`.   
 - Change the timestamp  
 - Reorder the quaternions in the file (`qw qx qy qz` >> `qx qy qz qw`).  
-- Other than that, everything is the same as the orginal repository (xecution command, environment setting, etc.).  
+- Other than that, everything is the same as the orginal repository (execution command, environment setting, etc.).  
 - Add comments in Korean for personal study  
 
 ## Reference for analyzing the code  
