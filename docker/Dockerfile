@@ -1,46 +1,28 @@
-FROM ros:kinetic-perception
+# Author: TaeYoung Kim
+# email: tyoung96@yonsei.ac.kr
 
-ENV CERES_VERSION="1.12.0"
-ENV CATKIN_WS=/root/catkin_ws
+FROM ros:melodic
 
-      # set up thread number for building
-RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
-      else export USE_PROC=$(($(nproc)/2)) ; fi && \
-      apt-get update && apt-get install -y \
-      cmake \
-      libatlas-base-dev \
-      libeigen3-dev \
-      libgoogle-glog-dev \
-      libsuitesparse-dev \
-      python-catkin-tools \
-      ros-${ROS_DISTRO}-cv-bridge \
-      ros-${ROS_DISTRO}-image-transport \
-      ros-${ROS_DISTRO}-message-filters \
-      ros-${ROS_DISTRO}-tf && \
-      rm -rf /var/lib/apt/lists/* && \
-      # Build and install Ceres
-      git clone https://ceres-solver.googlesource.com/ceres-solver && \
-      cd ceres-solver && \
-      git checkout tags/${CERES_VERSION} && \
-      mkdir build && cd build && \
-      cmake .. && \
-      make -j$(USE_PROC) install && \
-      rm -rf ../../ceres-solver && \
-      mkdir -p $CATKIN_WS/src/VINS-Mono/
+# Install PCL & Eigen & essential libraries
+RUN apt-get update && apt-get install -y cmake libeigen3-dev libpcl-dev \
+    ros-melodic-rviz ros-melodic-pcl-ros ros-melodic-eigen-conversions \
+    ros-melodic-cv-bridge ros-melodic-image-transport ros-melodic-message-filters ros-melodic-tf \ 
+    libatlas-base-dev libgoogle-glog-dev libsuitesparse-dev libglew-dev wget
 
-# Copy VINS-Mono
-COPY ./ $CATKIN_WS/src/VINS-Mono/
-# use the following line if you only have this dockerfile
-# RUN git clone https://github.com/HKUST-Aerial-Robotics/VINS-Mono.git
+# Install ceres-solver
+WORKDIR /home/thirdParty
+RUN wget https://github.com/ceres-solver/ceres-solver/archive/refs/tags/1.14.0.tar.gz
+RUN tar zxf 1.14.0.tar.gz
+WORKDIR /home/thirdParty/ceres-solver-1.14.0
 
-# Build VINS-Mono
-WORKDIR $CATKIN_WS
-ENV TERM xterm
-ENV PYTHONIOENCODING UTF-8
-RUN catkin config \
-      --extend /opt/ros/$ROS_DISTRO \
-      --cmake-args \
-        -DCMAKE_BUILD_TYPE=Release && \
-    catkin build && \
-    sed -i '/exec "$@"/i \
-            source "/root/catkin_ws/devel/setup.bash"' /ros_entrypoint.sh
+RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ../../ceres-solver-1.14.0 && make -j2 && make install
+
+
+WORKDIR /home/catkin_ws
+
+# Load ROS environment at each run
+COPY ./ros_entrypoint.sh /
+RUN chmod 755 /ros_entrypoint.sh
+ENTRYPOINT ["/ros_entrypoint.sh"]
+
+CMD ["bash"]

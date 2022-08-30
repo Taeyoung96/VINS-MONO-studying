@@ -508,7 +508,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
 
 void Estimator::solveOdometry()
 {
-    if (frame_count < WINDOW_SIZE)
+    if (frame_count < WINDOW_SIZE)  // window size가 10, frame이 10보다 작으면 optimizaiton을 하지 않는다.
         return;
     if (solver_flag == NON_LINEAR)
     {
@@ -709,25 +709,28 @@ void Estimator::optimization()
     ceres::LossFunction *loss_function;
     //loss_function = new ceres::HuberLoss(1.0);
     loss_function = new ceres::CauchyLoss(1.0);
-    for (int i = 0; i < WINDOW_SIZE + 1; i++)
+    for (int i = 0; i < WINDOW_SIZE + 1; i++)   // window size가 key frame을 결정
     {
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Pose[i], SIZE_POSE, local_parameterization);
         problem.AddParameterBlock(para_SpeedBias[i], SIZE_SPEEDBIAS);
     }
+
+    // 일단 NUM_OF_CAM은 무조건 하나
     for (int i = 0; i < NUM_OF_CAM; i++)
     {
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE, local_parameterization);
-        if (!ESTIMATE_EXTRINSIC)
+        if (!ESTIMATE_EXTRINSIC)    // 0번일 경우에만
         {
             ROS_DEBUG("fix extinsic param");
             problem.SetParameterBlockConstant(para_Ex_Pose[i]);
         }
-        else
+        else    // 1번,2번 일때
             ROS_DEBUG("estimate extinsic param");
     }
-    if (ESTIMATE_TD)
+
+    if (ESTIMATE_TD)    // time sync와 관련된 것
     {
         problem.AddParameterBlock(para_Td[0], 1);
         //problem.SetParameterBlockConstant(para_Td[0]);

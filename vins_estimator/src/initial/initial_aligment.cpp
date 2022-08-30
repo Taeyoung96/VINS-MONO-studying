@@ -122,6 +122,11 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vector
     g = g0;
 }
 
+/*
+* @brief: LinearAlignment
+* @parameter: all_image_frame, Bgs(gyrosope bias), g(gravity vector), x(extrinsic parameters)
+* @return: true if success, false otherwise
+*/
 bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g, VectorXd &x)
 {
     int all_frame_count = all_image_frame.size();
@@ -196,6 +201,11 @@ bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g, Vect
         return true;
 }
 
+/*
+* @brief: VisualIMUAlignment
+* @parameter: all_image_frame, Bgs(gyrosope bias), g(gravity vector), x(extrinsic parameters)
+* @return: true if success, false otherwise
+*/
 bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs, Vector3d &g, VectorXd &x)
 {
     solveGyroscopeBias(all_image_frame, Bgs);
