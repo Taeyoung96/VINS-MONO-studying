@@ -67,6 +67,9 @@ class Utility
         return ans;
     }
 
+    /*
+    * brief: Rotation matrix to yaw pitch roll, 순서 주의! Taeyoung comment
+    */
     static Eigen::Vector3d R2ypr(const Eigen::Matrix3d &R)
     {
         Eigen::Vector3d n = R.col(0);

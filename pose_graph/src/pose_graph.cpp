@@ -403,26 +403,37 @@ void PoseGraph::addKeyFrameIntoVoc(KeyFrame* keyframe)
     db.add(keyframe->brief_descriptors);
 }
 
+/*
+* @brief: add a new keyframe into pose graph and optimize 4DoF pose graph, 쓰레드를 통해 계속적으로 실행되는 함수
+* @param: None
+* @return: None
+*/
 void PoseGraph::optimize4DoF()
 {
     while(true)
     {
         int cur_index = -1;
         int first_looped_index = -1;
-        m_optimize_buf.lock();
+
+        m_optimize_buf.lock();  // lock을 걸어서 다른 쓰레드가 접근하지 못하게 한다.
+    
         while(!optimize_buf.empty())
         {
-            cur_index = optimize_buf.front();
-            first_looped_index = earliest_loop_index;
-            optimize_buf.pop();
+            cur_index = optimize_buf.front();   // 가장 최근에 들어온 keyframe의 index를 가져온다.
+            first_looped_index = earliest_loop_index;   // 가장 처음에 loop가 검출된 keyframe의 index를 가져온다.
+            optimize_buf.pop(); // 가장 최근에 들어온 keyframe의 index를 버퍼에서 제거한다.
         }
-        m_optimize_buf.unlock();
+
+        m_optimize_buf.unlock();    // lock을 해제한다.
+
+        // 현재의 index에 대한 keyframe이 존재할 때
         if (cur_index != -1)
         {
             printf("optimize pose graph \n");
             TicToc tmp_t;
-            m_keyframelist.lock();
-            KeyFrame* cur_kf = getKeyFrame(cur_index);
+            m_keyframelist.lock();  // keyframe list에 대한 lock을 건다. (바뀌지 않도록)
+
+            KeyFrame* cur_kf = getKeyFrame(cur_index);  // 현재의 index에 대한 keyframe을 가져온다.
 
             int max_length = cur_index + 1;
 
@@ -431,21 +442,27 @@ void PoseGraph::optimize4DoF()
             Quaterniond q_array[max_length];
             double euler_array[max_length][3];
             double sequence_array[max_length];
-
+            
+            // ceres solver를 활용한 non-linear optimization
             ceres::Problem problem;
             ceres::Solver::Options options;
             options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
             //options.minimizer_progress_to_stdout = true;
             //options.max_solver_time_in_seconds = SOLVER_TIME * 3;
             options.max_num_iterations = 5;
+
+
             ceres::Solver::Summary summary;
-            ceres::LossFunction *loss_function;
+            ceres::LossFunction *loss_function;     // loss function을 정의한다.
             loss_function = new ceres::HuberLoss(0.1);
             //loss_function = new ceres::CauchyLoss(1.0);
+
+            // LocalParameterization을 사용하는 이유 : https://groups.google.com/g/ceres-solver/c/7HfF6DnCv7o/m/h38kAxYKAwAJ
+            // LocalParameterization이 ceres-solver 2.2부터는 Manifold로 대체된다. (주의)
             ceres::LocalParameterization* angle_local_parameterization =
                 AngleLocalParameterization::Create();
 
-            list<KeyFrame*>::iterator it;
+            list<KeyFrame*>::iterator it;   // keyframe을 순회하기 위한 iterator
 
             int i = 0;
             for (it = keyframelist.begin(); it != keyframelist.end(); it++)
@@ -468,7 +485,7 @@ void PoseGraph::optimize4DoF()
                 euler_array[i][1] = euler_angle.y();
                 euler_array[i][2] = euler_angle.z();
 
-                sequence_array[i] = (*it)->sequence;
+                sequence_array[i] = (*it)->sequence;    // 이게 뭐지?
 
                 problem.AddParameterBlock(euler_array[i], 1, angle_local_parameterization);
                 problem.AddParameterBlock(t_array[i], 3);
@@ -480,6 +497,8 @@ void PoseGraph::optimize4DoF()
                 }
 
                 //add edge
+                // Taeyoung
+                // 여기서 IMU를 활용하여 world coordinate 기준으로 roll, pitch를 계산하는 방법이 나온다.
                 for (int j = 1; j < 5; j++)
                 {
                   if (i - j >= 0 && sequence_array[i] == sequence_array[i-j])
@@ -513,14 +532,13 @@ void PoseGraph::optimize4DoF()
                                                                   t_array[connected_index], 
                                                                   euler_array[i], 
                                                                   t_array[i]);
-                    
                 }
                 
                 if ((*it)->index == cur_index)
                     break;
                 i++;
             }
-            m_keyframelist.unlock();
+            m_keyframelist.unlock();    // keyframe list에 대한 lock을 해제한다.
 
             ceres::Solve(options, &problem, &summary);
             //std::cout << summary.BriefReport() << "\n";
@@ -532,7 +550,7 @@ void PoseGraph::optimize4DoF()
                 printf("optimize i: %d p: %f, %f, %f\n", j, t_array[j][0], t_array[j][1], t_array[j][2] );
             }
             */
-            m_keyframelist.lock();
+            m_keyframelist.lock();  // keyframe list에 대한 lock을 설정한다.
             i = 0;
             for (it = keyframelist.begin(); it != keyframelist.end(); it++)
             {
@@ -572,15 +590,18 @@ void PoseGraph::optimize4DoF()
                 R = r_drift * R;
                 (*it)->updatePose(P, R);
             }
-            m_keyframelist.unlock();
+            m_keyframelist.unlock();    // keyframe list에 대한 lock을 해제한다.
             updatePath();
         }
 
-        std::chrono::milliseconds dura(2000);
-        std::this_thread::sleep_for(dura);
+        std::chrono::milliseconds dura(2000);   // 2s
+        std::this_thread::sleep_for(dura);      // sleep for 2s
     }
 }
 
+/*
+* @brief : update path
+*/
 void PoseGraph::updatePath()
 {
     m_keyframelist.lock();

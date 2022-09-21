@@ -96,10 +96,12 @@ T NormalizeAngle(const T& angle_degrees) {
   	return angle_degrees;
 };
 
+// ceres-solver에서 사용하는 residual block 정의
 class AngleLocalParameterization {
  public:
-
-  template <typename T>
+  
+  // AutoDiffLocalParameterization을 사용하기 위해서는 반드시 operator ()를 정의해야 한다.
+  template <typename T>	
   bool operator()(const T* theta_radians, const T* delta_theta_radians,
                   T* theta_radians_plus_delta) const {
     *theta_radians_plus_delta =
@@ -107,10 +109,12 @@ class AngleLocalParameterization {
 
     return true;
   }
-
+  
+  // ceres-solver 2.2에서는 AutoDiffManifold로 정의
+  // Local parameter에 대한 Jacobian을 자동적으로 계산하는 함수
   static ceres::LocalParameterization* Create() {
     return (new ceres::AutoDiffLocalParameterization<AngleLocalParameterization,
-                                                     1, 1>);
+                                                     1, 1>);	// <global size, local size>
   }
 };
 

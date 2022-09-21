@@ -41,7 +41,7 @@ MatrixXd TangentBasis(Vector3d &g0)
 {
     Vector3d b, c;
     Vector3d a = g0.normalized();
-    Vector3d tmp(0, 0, 1);
+    Vector3d tmp(0, 0, 1);  // world corrdinate z axis
     if(a == tmp)
         tmp << 1, 0, 0;
     b = (tmp - a * (a.transpose() * tmp)).normalized();
