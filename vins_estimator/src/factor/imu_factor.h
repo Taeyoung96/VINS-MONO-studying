@@ -85,7 +85,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9>
 
             if (jacobians[0])
             {
-                Eigen::Map<Eigen::Matrix<double, 15, 7, Eigen::RowMajor>> jacobian_pose_i(jacobians[0]);
+                Eigen::Map<Eigen::Matrix<double, 15, 7, Eigen::RowMajor >> jacobian_pose_i(jacobians[0]);
                 jacobian_pose_i.setZero();
 
                 jacobian_pose_i.block<3, 3>(O_P, O_P) = -Qi.inverse().toRotationMatrix();

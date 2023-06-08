@@ -32,11 +32,12 @@ bool ProjectionFactor::Evaluate(double const *const *parameters, double *residua
 
     double inv_dep_i = parameters[3][0];
 
-    Eigen::Vector3d pts_camera_i = pts_i / inv_dep_i;
-    Eigen::Vector3d pts_imu_i = qic * pts_camera_i + tic;
-    Eigen::Vector3d pts_w = Qi * pts_imu_i + Pi;
-    Eigen::Vector3d pts_imu_j = Qj.inverse() * (pts_w - Pj);
-    Eigen::Vector3d pts_camera_j = qic.inverse() * (pts_imu_j - tic);
+    Eigen::Vector3d pts_camera_i = pts_i / inv_dep_i;           // i번째 카메라의 i번째 특징점의 카메라 좌표
+    Eigen::Vector3d pts_imu_i = qic * pts_camera_i + tic;       // i번째 카메라의 i번째 특징점의 IMU 좌표
+    Eigen::Vector3d pts_w = Qi * pts_imu_i + Pi;                // i번째 카메라의 i번째 특징점의 월드 좌표
+    Eigen::Vector3d pts_imu_j = Qj.inverse() * (pts_w - Pj);    // j번째 카메라의 i번째 특징점의 IMU 좌표
+    Eigen::Vector3d pts_camera_j = qic.inverse() * (pts_imu_j - tic); // j번째 카메라의 i번째 특징점의 카메라 좌표
+
     Eigen::Map<Eigen::Vector2d> residual(residuals);
 
 #ifdef UNIT_SPHERE_ERROR 
@@ -50,10 +51,12 @@ bool ProjectionFactor::Evaluate(double const *const *parameters, double *residua
 
     if (jacobians)
     {
-        Eigen::Matrix3d Ri = Qi.toRotationMatrix();
-        Eigen::Matrix3d Rj = Qj.toRotationMatrix();
-        Eigen::Matrix3d ric = qic.toRotationMatrix();
+        Eigen::Matrix3d Ri = Qi.toRotationMatrix(); // i번째 pose의 Rotation matrix
+        Eigen::Matrix3d Rj = Qj.toRotationMatrix(); // j번째 pose의 Rotation matrix
+        Eigen::Matrix3d ric = qic.toRotationMatrix(); // Camera-IMU Rotation matrix
+
         Eigen::Matrix<double, 2, 3> reduce(2, 3);
+
 #ifdef UNIT_SPHERE_ERROR
         double norm = pts_camera_j.norm();
         Eigen::Matrix3d norm_jaco;
@@ -66,8 +69,8 @@ bool ProjectionFactor::Evaluate(double const *const *parameters, double *residua
                      - x1 * x3 / pow(norm, 3),            - x2 * x3 / pow(norm, 3),            1.0 / norm - x3 * x3 / pow(norm, 3);
         reduce = tangent_base * norm_jaco;
 #else
-        reduce << 1. / dep_j, 0, -pts_camera_j(0) / (dep_j * dep_j),
-            0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
+        reduce      << 1. / dep_j, 0, -pts_camera_j(0) / (dep_j * dep_j),
+                    0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
 #endif
         reduce = sqrt_info * reduce;
 

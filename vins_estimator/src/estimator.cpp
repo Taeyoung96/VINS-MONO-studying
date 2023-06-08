@@ -508,7 +508,7 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l)
 
 void Estimator::solveOdometry()
 {
-    if (frame_count < WINDOW_SIZE)  // window size가 10, frame이 10보다 작으면 optimizaiton을 하지 않는다.
+    if (frame_count < WINDOW_SIZE)                              // window size가 10, frame이 10보다 작으면 optimizaiton을 하지 않는다.
         return;
     if (solver_flag == NON_LINEAR)
     {
@@ -721,7 +721,7 @@ void Estimator::optimization()
     {
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE, local_parameterization);
-        if (!ESTIMATE_EXTRINSIC)    // 0번일 경우에만
+        if (!ESTIMATE_EXTRINSIC)    // Extrinsic parameter를 최적화에 넣을지 말지 판단
         {
             ROS_DEBUG("fix extinsic param");
             problem.SetParameterBlockConstant(para_Ex_Pose[i]);
@@ -730,14 +730,14 @@ void Estimator::optimization()
             ROS_DEBUG("estimate extinsic param");
     }
 
+    TicToc t_whole, t_prepare;
+    vector2double();
+
     if (ESTIMATE_TD)    // time sync와 관련된 것
     {
         problem.AddParameterBlock(para_Td[0], 1);
         //problem.SetParameterBlockConstant(para_Td[0]);
     }
-
-    TicToc t_whole, t_prepare;
-    vector2double();
 
     if (last_marginalization_info)
     {
@@ -840,8 +840,17 @@ void Estimator::optimization()
     }
 
     ceres::Solver::Options options;
-
     options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.num_threads = 2;
+    options.max_num_iterations = NUM_ITERATIONS;
+
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    cout << summary.BriefReport() << endl;
+
+
+
+
     //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = NUM_ITERATIONS;
