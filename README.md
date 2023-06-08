@@ -8,6 +8,9 @@
 VINS-MONO에는 다양한 자료구조들이 정의되고 사용되고 있습니다.  
 이해하기 쉽도록, [Various_data_structures](./Various_data_structures.md)에 정리하고 있습니다.  
 
+## VIO optimization presentation link  
+- [VINS-MONO optimization code with equation](https://docs.google.com/presentation/d/1nTEZSQ08b7kZY55xHOh18uqleC5xXaCp851KU59LbwU/edit?usp=sharing)
+
 ## What has changed in this Repository
 
 - Add config file for [OpenLORIS-Scene Dataset](https://lifelong-robotic-vision.github.io/dataset/scene.html)  
