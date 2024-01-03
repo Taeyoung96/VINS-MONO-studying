@@ -2,6 +2,7 @@
 
 using namespace ros;
 using namespace Eigen;
+
 ros::Publisher pub_odometry, pub_latest_odometry;
 ros::Publisher pub_path, pub_relo_path;
 ros::Publisher pub_point_cloud, pub_margin_cloud;
@@ -303,6 +304,7 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
     static tf::TransformBroadcaster br;
     tf::Transform transform;
     tf::Quaternion q;
+    
     // body frame
     Vector3d correct_t;
     Quaterniond correct_q;

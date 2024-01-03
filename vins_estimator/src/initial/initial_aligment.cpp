@@ -1,5 +1,6 @@
 #include "initial_alignment.h"
 
+// 여기서 gyroscope bias initial calibration이라는 메시지를 출력한다.
 void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame, Vector3d* Bgs)
 {
     Matrix3d A;

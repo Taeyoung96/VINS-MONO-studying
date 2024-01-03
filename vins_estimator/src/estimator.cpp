@@ -158,6 +158,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             Matrix3d calib_ric; // rotation만 우선 초기화 진행
 
             // 여기서도 frame count가 늘어남
+            // 여기 if문을 들어가게 되면 그 때부터 Rviz 상에서 Camera가 나타나고 path가 만들어진다.
             if (initial_ex_rotation.CalibrationExRotation(corres, pre_integrations[frame_count]->delta_q, calib_ric))
             {
                 ROS_INFO("initial extrinsic rotation calib success");
@@ -201,6 +202,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
 
     else    // solver_flag == NON_LINEAR
     {
+        ROS_INFO("Non linear optimization flag");
         TicToc t_solve;
         solveOdometry();
         ROS_DEBUG("solver costs: %fms", t_solve.toc());
